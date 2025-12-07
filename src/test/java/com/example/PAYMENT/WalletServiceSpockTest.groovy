@@ -20,7 +20,7 @@ class WalletServiceSpockTest extends Specification{
     def "지갑 생성 요청 시 지갑을 갖고 있지 않다면 생성된다"() {
         given:
         CreateWalletRequest request = new CreateWalletRequest(1L)
-        walletRepository.findWalletByUserId(1L) >> Optional.empty()
+        walletRepository.findTopByUserId(1L) >> Optional.empty()
 
         when:
         def createdWallet = walletService.createWallet(request)
@@ -35,7 +35,7 @@ class WalletServiceSpockTest extends Specification{
     def "지갑 생성 요청시 지갑을 갖고 있다면 오류를 던진다"() {
         given:
         CreateWalletRequest request = new CreateWalletRequest(1L)
-        walletRepository.findWalletByUserId(1L) >> Optional.of(new Wallet(1L))
+        walletRepository.findTopByUserId(1L) >> Optional.of(new Wallet(1L))
 
         when:
         def createdWallet = walletService.createWallet(request)
@@ -51,7 +51,7 @@ class WalletServiceSpockTest extends Specification{
         def userId = 1L
         def wallet = new Wallet(userId)
         wallet.balance = new BigDecimal(1000)
-        walletRepository.findWalletByUserId(userId) >> Optional.of(wallet)
+        walletRepository.findTopByUserId(userId) >> Optional.of(wallet)
 
         when:
         def result = walletService.findWalletByUserId(userId)
@@ -67,7 +67,7 @@ class WalletServiceSpockTest extends Specification{
         def userId = 1L
         def wallet = new Wallet(userId)
         wallet.balance = new BigDecimal(1000)
-        walletRepository.findWalletByUserId(userId) >> Optional.empty()
+        walletRepository.findTopByUserId(userId) >> Optional.empty()
 
         when:
         def result = walletService.findWalletByUserId(1L)
