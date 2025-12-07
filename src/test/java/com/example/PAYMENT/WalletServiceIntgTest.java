@@ -1,9 +1,6 @@
 package com.example.PAYMENT;
 
-import com.example.PAYMENT.wallet.CreateWalletRequest;
-import com.example.PAYMENT.wallet.CreateWalletResponse;
-import com.example.PAYMENT.wallet.WalletRepository;
-import com.example.PAYMENT.wallet.WalletService;
+import com.example.PAYMENT.wallet.*;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -12,6 +9,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -64,5 +62,35 @@ public class WalletServiceIntgTest {
         boolean finished = service.awaitTermination(1, TimeUnit.MINUTES);
         System.out.println(finished);
         System.out.println(walletRepository.findAllByUserId(userId));
+    }
+
+    @Test
+    public void 동시에_충전을_진행한다() throws InterruptedException {
+        Long walletId = 1L;
+        AddBalanceWalletRequest request = new AddBalanceWalletRequest(
+                walletId, BigDecimal.TEN);
+
+        int numOfThread = 100;
+        ExecutorService service = Executors.newFixedThreadPool(numOfThread);
+        AtomicInteger completedTasks = new AtomicInteger(0);
+
+        for (int i = 0; i < numOfThread; i++) {
+            service.submit(() -> {
+                try {
+                    walletService.addBalanceJava(request);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                } finally {
+                    completedTasks.incrementAndGet();
+                }
+            });
+        }
+
+        service.shutdown();
+        boolean finished = service.awaitTermination(1, TimeUnit.MINUTES);
+        System.out.println(finished);
+        System.out.println(walletService.findWalletJava(walletId));
+        Assertions.assertEquals(1000L,
+                walletService.findWalletJava(walletId).balance().longValue());
     }
 }
